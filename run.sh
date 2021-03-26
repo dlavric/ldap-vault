@@ -35,6 +35,7 @@ ldapadd -x -w ${ADMIN_PASSWORD?} -D "${ADMIN_USER?}" -f ./configs/ldap-seed.ldif
 ldappasswd -s ${USER_PASSWORD?} -w ${ADMIN_PASSWORD?} -D "${ADMIN_USER?}" -x "uid=bob,ou=users,dc=hashicorp,dc=com"
 ldappasswd -s ${USER_PASSWORD?} -w ${ADMIN_PASSWORD?} -D "${ADMIN_USER?}" -x "uid=alice,ou=users,dc=hashicorp,dc=com"
 ldappasswd -s ${USER_PASSWORD?} -w ${ADMIN_PASSWORD?} -D "${ADMIN_USER?}" -x "uid=joe,ou=users,dc=hashicorp,dc=com"
+ldappasswd -s ${USER_PASSWORD?} -w ${ADMIN_PASSWORD?} -D "${ADMIN_USER?}" -x "uid=daniela,ou=users,dc=hashicorp,dc=com"
 
 docker run \
   --name=vault \

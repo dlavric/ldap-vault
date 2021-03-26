@@ -25,7 +25,12 @@ $ chmod +x run.sh
 $ ./run.sh
 ```
 
-- Yu need to first login into vault with root:
+- Export the environment variable for Vault:
+```shell
+$ export VAULT_ADDR="http://127.0.0.1:8200"
+```
+
+- You need to first login into vault with root:
 ```shell
 $ vault login root
 ```
@@ -48,7 +53,7 @@ $ vault write auth/ldap/config \
 - Create sample data to be accessed by distinct policies:
 ```shell
 $ vault kv put secret/dev code=life
-$ vault kv put secret/qa testing=rocks:
+$ vault kv put secret/qa testing=rocks
 ```
 
 - Setup the policies which will be applied to our users using group mappings:
@@ -99,3 +104,10 @@ $ vault kv get secret/dev
 $ vault kv get secret/qa
 ```
 
+- Daniela is in the dev and qa groups, so can access both secrets
+```shell
+$ vault login -method=ldap username=daniela
+
+$ vault kv get secret/dev
+$ vault kv get secret/qa
+```
