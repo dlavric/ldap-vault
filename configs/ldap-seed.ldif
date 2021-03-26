@@ -1,0 +1,97 @@
+dn: ou=users,dc=hashicorp,dc=com
+objectClass: organizationalunit
+objectClass: top
+ou: users
+description: users
+
+dn: ou=groups,dc=hashicorp,dc=com
+objectClass: organizationalunit
+objectClass: top
+ou: groups
+description: groups
+
+dn: uid=alice,ou=users,dc=hashicorp,dc=com
+cn: Alice Foobar
+gidnumber: 1000
+objectClass: top
+objectClass: account
+objectclass: posixAccount
+objectclass: shadowAccount
+uid: alice
+uidnumber: 1000
+homeDirectory: /home/alice
+loginShell: /bin/bash
+gecos: hashicorp
+userPassword: {crypt}x
+shadowLastChange: 0
+shadowMax: 0
+shadowWarning: 0
+
+dn: uid=bob,ou=users,dc=hashicorp,dc=com
+cn: Bob Foobar
+gidnumber: 1001
+objectClass: top
+objectClass: account
+objectclass: posixAccount
+objectclass: shadowAccount
+uid: bob 
+uidnumber: 1001
+homeDirectory: /home/bob
+loginShell: /bin/bash
+gecos: hashicorp
+userPassword: {crypt}x
+shadowLastChange: 0
+shadowMax: 0
+shadowWarning: 0
+
+dn: uid=joe,ou=users,dc=hashicorp,dc=com
+cn: Joe Foobar
+gidnumber: 1002
+objectClass: top
+objectClass: account
+objectclass: posixAccount
+objectclass: shadowAccount
+uid: joe
+uidnumber: 1002
+homeDirectory: /home/joe
+loginShell: /bin/bash
+gecos: hashicorp
+userPassword: {crypt}x
+shadowLastChange: 0
+shadowMax: 0
+shadowWarning: 0
+
+dn: uid=daniela,ou=users,dc=hashicorp,dc=com
+cn: Daniela Foobar
+gidnumber: 1003
+objectClass: top
+objectClass: account
+objectclass: posixAccount
+objectclass: shadowAccount
+uid: daniela
+uidnumber: 1003
+homeDirectory: /home/daniela
+loginShell: /bin/bash
+gecos: hashicorp
+userPassword: {crypt}x
+shadowLastChange: 0
+shadowMax: 0
+shadowWarning: 0
+
+dn: cn=dev,ou=groups,dc=hashicorp,dc=com
+cn: dev
+description: Dev group
+gidnumber: 10000
+memberuid: alice
+memberuid: bob
+memberuid: daniela
+objectclass: posixGroup
+
+dn: cn=qa,ou=groups,dc=hashicorp,dc=com
+cn: qa
+description: QA group
+gidnumber: 10001
+memberuid: bob
+memberuid: joe
+memberuid: daniela
+objectclass: posixGroup

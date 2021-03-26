@@ -1,0 +1,219 @@
+## Steps I followed to setup Vault with LDAP authentication method
+
+- deleted the containers from docker (vault and ldap)
+
+- Export VAULT_ADDR variable:
+```shell`
+$ export VAULT_ADDR="http://127.0.0.1:8200"
+```
+
+- Login in Vault as root:
+```shell
+$ vault login root 
+```
+
+Output:
+```
+Key                  Value
+---                  -----
+token                root
+token_accessor       ugmNavvfEV4tObDYkiRKLusw
+token_duration       ∞
+token_renewable      false
+token_policies       ["root"]
+identity_policies    []
+policies             ["root"]
+```
+
+- Enable LDAP authentication method:
+```shell
+$ vault auth enable ldap
+Success! Enabled ldap auth method at: ldap/
+
+- Setup Vault to use LDAP configuration:
+```
+$ vault write auth/ldap/config \
+    url="ldap://ldap" \
+    userdn="ou=users,dc=hashicorp,dc=com" \
+    userattr="uid" \
+    groupdn="ou=groups,dc=hashicorp,dc=com" \
+    groupattr="cn" \
+    groupfilter="(|(memberUid={{.Username}})(member={{.UserDN}})(uniqueMember={{.UserDN}}))" \
+    binddn="cn=admin,dc=hashicorp,dc=com" \
+    bindpass='admin'
+Success! Data written to: auth/ldap/config
+```
+
+- Create sample data to be accessed by different policies:
+```
+$ vault kv put secret/dev code=life
+$ vault kv put secret/qa testing=rocks
+```
+
+- Create policy `dev` and `qa`:
+```shell
+$ vault policy write dev - <<EOF
+path "secret/data/dev" {
+  capabilities = ["read"]
+}
+EOF
+
+$ vault policy write qa - <<EOF
+path "secret/data/qa" {
+  capabilities = ["read"]
+}
+EOF
+
+Success! Uploaded policy: dev
+Success! Uploaded policy: qa
+```
+
+- Add the policies to Vault:
+```shell
+$ vault write auth/ldap/groups/dev policies=dev
+$ vault write auth/ldap/groups/qa policies=qa
+
+Success! Data written to: auth/ldap/groups/dev
+Success! Data written to: auth/ldap/groups/qa
+```
+
+## Test the login works:
+
+- Alice:
+```shell
+$ vault login -method=ldap username=alice
+
+Password (will be hidden): 
+Success! You are now authenticated. The token information displayed below
+is already stored in the token helper. You do NOT need to run "vault login"
+again. Future Vault requests will automatically use this token.
+
+Key                    Value
+---                    -----
+token                  s.JXwTZ8ESkTl0Sr0hjcF6Hho6
+token_accessor         rrA7kM6P9sz7rbr0SA8ak7W2
+token_duration         768h
+token_renewable        true
+token_policies         ["default" "dev"]
+identity_policies      []
+policies               ["default" "dev"]
+token_meta_username    alice
+
+$ vault kv get secret/dev
+$ vault kv get secret/qa
+
+====== Metadata ======
+Key              Value
+---              -----
+created_time     2021-03-26T12:07:05.394592416Z
+deletion_time    n/a
+destroyed        false
+version          1
+
+==== Data ====
+Key     Value
+---     -----
+code    life
+Error reading secret/data/qa: Error making API request.
+
+URL: GET http://127.0.0.1:8200/v1/secret/data/qa
+Code: 403. Errors:
+
+* 1 error occurred:
+        * permission denied
+```
+
+- Bob:
+```
+$ vault login -method=ldap username=bob
+
+Password (will be hidden): 
+Success! You are now authenticated. The token information displayed below
+is already stored in the token helper. You do NOT need to run "vault login"
+again. Future Vault requests will automatically use this token.
+
+Key                    Value
+---                    -----
+token                  s.dny6HUfyFfQh8SKZ6b8Y4lWR
+token_accessor         MeLpoDXFEZ0Nq8bKXoECjOA5
+token_duration         768h
+token_renewable        true
+token_policies         ["default" "dev" "qa"]
+identity_policies      []
+policies               ["default" "dev" "qa"]
+token_meta_username    bob   
+
+====== Metadata ======
+Key              Value
+---              -----
+created_time     2021-03-26T12:07:05.394592416Z
+deletion_time    n/a
+destroyed        false
+version          1
+
+==== Data ====
+Key     Value
+---     -----
+code    life
+====== Metadata ======
+Key              Value
+---              -----
+created_time     2021-03-26T12:07:05.449685214Z
+deletion_time    n/a
+destroyed        false
+version          1
+
+===== Data =====
+Key        Value
+---        -----
+testing    rocks
+```
+
+- Joe:
+```shell
+$ vault login -method=ldap username=joe
+
+Password (will be hidden): 
+Success! You are now authenticated. The token information displayed below
+is already stored in the token helper. You do NOT need to run "vault login"
+again. Future Vault requests will automatically use this token.
+
+Key                    Value
+---                    -----
+token                  s.vBKY8BjhsSN46aJCsl62c1Fz
+token_accessor         ufmFheToYBAgshyG0B17eqzc
+token_duration         768h
+token_renewable        true
+token_policies         ["default" "qa"]
+identity_policies      []
+policies               ["default" "qa"]
+token_meta_username    joe
+
+$ vault kv get secret/dev
+$ vault kv get secret/qa
+
+
+Error reading secret/data/dev: Error making API request.
+
+URL: GET http://127.0.0.1:8200/v1/secret/data/dev
+Code: 403. Errors:
+
+* 1 error occurred:
+        * permission denied
+
+
+====== Metadata ======
+Key              Value
+---              -----
+created_time     2021-03-26T12:07:05.449685214Z
+deletion_time    n/a
+destroyed        false
+version          1
+
+===== Data =====
+Key        Value
+---        -----
+testing    rocks
+```
+
+
